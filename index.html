@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bear Goes Pub 🐻🍺</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlay */
+        #uiLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+
+        .ui-element {
+            pointer-events: auto;
+        }
+
+        /* Objective Display */
+        #objectiveBox {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(139, 69, 19, 0.9);
+            border: 3px solid #8B4513;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: #FFE4B5;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .objective-title {
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .objective-text {
+            color: #FFE4B5;
+        }
+
+        /* Mini Quest Tracker */
+        #questTracker {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(25, 25, 112, 0.9);
+            border: 3px solid #4169E1;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: #87CEEB;
+            max-width: 250px;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .quest-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(65, 105, 225, 0.3);
+        }
+
+        .quest-item:last-child {
+            border-bottom: none;
+        }
+
+        .quest-completed {
+            color: #90EE90;
+            text-decoration: line-through;
+        }
+
+        .quest-active {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        /* Interaction Prompt */
+        #interactionPrompt {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #FFD700;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            animation: pulse 1s infinite;
+            z-index: 100;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* Controls Display */
+        #controlsDisplay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #666;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.4;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            #controlsDisplay {
+                display: none;
+            }
+
+            #objectiveBox {
+                font-size: 12px;
+                padding: 10px 15px;
+                max-width: 200px;
+            }
+
+            #questTracker {
+                font-size: 10px;
+                padding: 10px 15px;
+                max-width: 180px;
+            }
+        }
+
+        /* Pause Menu */
+        #pauseMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #pauseMenu.active {
+            display: flex;
+        }
+
+        .pause-title {
+            font-size: 48px;
+            color: #FFD700;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .pause-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pause-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #8B4513;
+            color: #FFE4B5;
+            border: 2px solid #FFD700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .pause-btn:hover {
+            background: #A0522D;
+            transform: scale(1.05);
+        }
+
+        /* Mobile Virtual Joystick */
+        #joystick {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(100, 100, 100, 0.3);
+            border: 2px solid rgba(150, 150, 150, 0.5);
+            border-radius: 50%;
+            display: none;
+            z-index: 500;
+        }
+
+        #joystick.active {
+            display: block;
+        }
+
+        #joystickThumb {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(150, 150, 150, 0.6);
+            border: 2px solid rgba(200, 200, 200, 0.8);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+        }
+
+        #joystickThumb:active {
+            cursor: grabbing;
+        }
+
+        /* Mobile Action Buttons */
+        #actionButtons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 500;
+        }
+
+        #actionButtons.active {
+            display: flex;
+        }
+
+        .action-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid #FFD700;
+            background: rgba(139, 69, 19, 0.8);
+            color: #FFE4B5;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .action-btn:active {
+            transform: scale(0.9);
+            background: rgba(139, 69, 19, 1);
+        }
+
+        /* Pause button */
+        #pauseBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(100, 100, 100, 0.8);
+            border: 2px solid #FFD700;
+            border-radius: 4px;
+            color: #FFD700;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.2s;
+        }
+
+        #pauseBtn:hover {
+            background: rgba(100, 100, 100, 1);
+        }
+
+        /* Dialogue Box */
+        #dialogueBox {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #8B4513;
+            padding: 20px;
+            border-radius: 8px;
+            color: #FFE4B5;
+            max-width: 500px;
+            font-size: 14px;
+            display: none;
+            z-index: 200;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+        }
+
+        #dialogueBox.active {
+            display: block;
+        }
+
+        .dialogue-character {
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+
+        .dialogue-text {
+            line-height: 1.6;
+            color: #FFE4B5;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            #pauseBtn {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                top: 15px;
+                right: 15px;
+            }
+
+            .ui-element {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+        <div id="uiLayer">
+            <div id="objectiveBox" class="ui-element">
+                <div class="objective-title">🎯 Objective</div>
+                <div class="objective-text" id="objectiveText">Explore the pub and find Toby!</div>
+            </div>
+            <div id="questTracker" class="ui-element">
+                <div style="font-weight: bold; color: #FFD700; margin-bottom: 10px;">📋 Quests</div>
+                <div id="questList"></div>
+            </div>
+            <div id="interactionPrompt"></div>
+            <div id="dialogueBox">
+                <div class="dialogue-character" id="dialogueCharacter"></div>
+                <div class="dialogue-text" id="dialogueText"></div>
+            </div>
+            <div id="controlsDisplay">
+                <strong>Controls:</strong><br>
+                WASD - Move | Mouse - Look | E - Interact | P - Pause<br>
+                SPACE - Jump | TAB - Hold for info
+            </div>
+            <button id="pauseBtn" class="ui-element">⏸</button>
+            <div id="pauseMenu">
+                <div class="pause-title">⏸ PAUSED</div>
+                <div class="pause-buttons">
+                    <button class="pause-btn" onclick="game.resumeGame()">Resume</button>
+                    <button class="pause-btn" onclick="game.resetGame()">Reset</button>
+                    <button class="pause-btn" onclick="alert('Bear Goes Pub v1.0\nA British Pub Adventure 🐻🍺\n\nMade with ❤️')">About</button>
+                </div>
+            </div>
+            <div id="controlsDisplay">WASD-Move | E-Interact | P-Pause | Mouse-Look</div>
+            <div id="joystick" class="ui-element">
+                <div id="joystickThumb"></div>
+            </div>
+            <div id="actionButtons" class="ui-element">
+                <button class="action-btn" id="interactBtn" onclick="game.tryInteract()">🔨</button>
+                <button class="action-btn" id="pauseBtn2" onclick="game.togglePause()">⏸</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
