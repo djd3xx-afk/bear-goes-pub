@@ -354,8 +354,7 @@
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="canvas"></canvas>
+    <div id="gameContainer">\n        <canvas id="canvas"></canvas>
         <div id="uiLayer">
             <div id="objectiveBox" class="ui-element">
                 <div class="objective-title">🎯 Objective</div>
@@ -381,7 +380,7 @@
                 <div class="pause-buttons">
                     <button class="pause-btn" onclick="game.resumeGame()">Resume</button>
                     <button class="pause-btn" onclick="game.resetGame()">Reset</button>
-                    <button class="pause-btn" onclick="alert('Bear Goes Pub v1.0\nA British Pub Adventure 🐻🍺\n\nMade with ❤️')">About</button>
+                    <button class="pause-btn" onclick="alert('Bear Goes Pub v1.0\\nA British Pub Adventure 🐻🍺\\n\\nMade with ❤️')">About</button>
                 </div>
             </div>
             <div id="controlsDisplay">WASD-Move | E-Interact | P-Pause | Mouse-Look</div>
@@ -395,7 +394,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
